@@ -1,3 +1,5 @@
+import Foundation
+
 struct ScriptureVerse: Codable {
     let reference: String
     let displayLabel: String

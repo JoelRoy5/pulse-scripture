@@ -1,3 +1,5 @@
+import Foundation
+
 struct BiometricFeatures {
     var hrv_sdnn: Double
     var hrv_7day_slope: Double
@@ -15,6 +17,6 @@ struct BiometricFeatures {
 
     static func timeEncoding(hour: Int) -> (sin: Double, cos: Double) {
         let angle = 2 * Double.pi * Double(hour) / 24.0
-        return (sin: Foundation.sin(angle), cos: Foundation.cos(angle))
+        return (sin: sin(angle), cos: cos(angle))
     }
 }

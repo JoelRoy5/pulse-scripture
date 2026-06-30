@@ -1,3 +1,5 @@
+import Foundation
+
 struct SharedVerse: Codable {
     let reference: String
     let displayLabel: String
