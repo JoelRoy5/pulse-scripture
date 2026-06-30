@@ -11,7 +11,7 @@ enum BiometricPayloadBuilder {
         wristTemp: Double?,
         previousHRVReadings: [Double] = []
     ) -> (BiometricFeatures, BiometricContext) {
-        let hrDelta = (currentHR ?? 0) - (restingHR ?? 0)
+        let hrDelta: Double = (currentHR != nil && restingHR != nil) ? currentHR! - restingHR! : 0.0
         let hour = Calendar.current.component(.hour, from: Date())
         let timeEnc = BiometricFeatures.timeEncoding(hour: hour)
         let slope = computeHRVSlope(readings: previousHRVReadings)
