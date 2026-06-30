@@ -12,7 +12,7 @@ struct SleepSummary {
 }
 
 @MainActor
-final class HealthKitManager: ObservableObject {
+final class HealthKitManager {
     private let store = HKHealthStore()
 
     private let readTypes: Set<HKObjectType> = [
@@ -29,7 +29,7 @@ final class HealthKitManager: ObservableObject {
         guard HKHealthStore.isHealthDataAvailable() else {
             throw HealthKitError.notAvailable
         }
-        try await store.requestAuthorization(toShare: nil, read: readTypes)
+        try await store.requestAuthorization(toShare: [], read: readTypes)
     }
 
     func latestHRV() async -> Double? {
@@ -84,7 +84,7 @@ final class HealthKitManager: ObservableObject {
             store.enableBackgroundDelivery(for: type, frequency: .immediate) { _, _ in }
             let query = HKObserverQuery(sampleType: type, predicate: nil) { _, completionHandler, _ in
                 handler()
-                completionHandler?()
+                completionHandler()
             }
             store.execute(query)
         }
@@ -125,7 +125,7 @@ final class HealthKitManager: ObservableObject {
             case .awake:
                 awakenings += 1
                 let hour = Calendar.current.component(.hour, from: sample.startDate)
-                if (1...5).contains(hour) { hadLateWake = true }
+                if (0...5).contains(hour) { hadLateWake = true }
             default: break
             }
         }
