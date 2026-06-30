@@ -10,7 +10,7 @@ struct GlooRequest: Encodable {
         let hrDeltaBpm: Double?
         let lateNightWake: Bool
         let sleepEfficiency: Double?
-        let hrvTrend: String
+        let hrvTrend: String?
     }
 
     struct TimeContext: Encodable {

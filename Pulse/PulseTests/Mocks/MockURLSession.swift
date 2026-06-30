@@ -1,5 +1,6 @@
 // PulseTests/Mocks/MockURLSession.swift
 import Foundation
+@testable import Pulse
 
 final class MockURLSession: URLSessionProtocol {
     var stubbedData: Data = Data()

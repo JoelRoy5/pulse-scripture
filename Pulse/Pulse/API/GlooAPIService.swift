@@ -6,11 +6,6 @@ final class GlooAPIService {
         case decodingError
     }
 
-    struct UserPreferences {
-        let translation: String
-        let language: String
-    }
-
     private let session: URLSessionProtocol
     private let apiKey: String
     private let baseURL = "https://api.gloo.ai/v1"  // update after July 6 with real URL
@@ -23,7 +18,7 @@ final class GlooAPIService {
     func fetchVerse(
         for classification: EmotionClassification,
         biometricContext: BiometricContext? = nil,
-        preferences: UserPreferences
+        preferences: GlooRequest.UserPreferences
     ) async throws -> GlooResponse {
         let body = buildRequest(classification: classification,
                                 context: biometricContext,
@@ -46,7 +41,10 @@ final class GlooAPIService {
 
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        guard let parsed = try? decoder.decode(GlooResponse.self, from: data) else {
+        let parsed: GlooResponse
+        do {
+            parsed = try decoder.decode(GlooResponse.self, from: data)
+        } catch {
             throw APIError.decodingError
         }
         return parsed
@@ -55,13 +53,14 @@ final class GlooAPIService {
     private func buildRequest(
         classification: EmotionClassification,
         context: BiometricContext?,
-        preferences: UserPreferences
+        preferences: GlooRequest.UserPreferences
     ) -> GlooRequest {
-        let hour = Calendar.current.component(.hour, from: Date())
+        let now = Date()
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEEE"
+        let hour = Calendar.current.component(.hour, from: now)
 
         return GlooRequest(
             emotionalState: classification.state.rawValue,
@@ -69,18 +68,15 @@ final class GlooAPIService {
             supportingSignals: GlooRequest.SupportingSignals(
                 hrvSdnnMs: context?.hrvSdnn,
                 hrDeltaBpm: context?.hrDelta,
-                lateNightWake: (1...5).contains(hour) && (context?.hrDelta ?? 0) > 10,
+                lateNightWake: (0...5).contains(hour) && (context?.hrDelta ?? 0) > 10,
                 sleepEfficiency: context?.sleepEfficiency,
-                hrvTrend: context?.hrvTrend ?? "stable"
+                hrvTrend: context?.hrvTrend
             ),
             timeContext: GlooRequest.TimeContext(
-                timeOfDay: formatter.string(from: Date()),
-                dayOfWeek: dayFormatter.string(from: Date())
+                timeOfDay: formatter.string(from: now),
+                dayOfWeek: dayFormatter.string(from: now)
             ),
-            userPreferences: GlooRequest.UserPreferences(
-                translation: preferences.translation,
-                language: preferences.language
-            )
+            userPreferences: preferences
         )
     }
 }

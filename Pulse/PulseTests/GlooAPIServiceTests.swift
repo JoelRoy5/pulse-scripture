@@ -7,16 +7,23 @@ final class GlooAPIServiceTests: XCTestCase {
     var sut: GlooAPIService!
 
     override func setUp() {
+        super.setUp()
         mockSession = MockURLSession()
         sut = GlooAPIService(session: mockSession, apiKey: "test-key")
+    }
+
+    override func tearDown() {
+        sut = nil
+        mockSession = nil
+        super.tearDown()
     }
 
     func test_fetchVerse_returnsVerseReference() async throws {
         let json = """
         {
-          "scriptureTheme": "peace_in_sleeplessness",
-          "verseReference": "PSA.4.8",
-          "verseDisplayLabel": "Psalm 4:8",
+          "scripture_theme": "peace_in_sleeplessness",
+          "verse_reference": "PSA.4.8",
+          "verse_display_label": "Psalm 4:8",
           "reflection": "Your body is restless tonight. You are still held."
         }
         """.data(using: .utf8)!
@@ -27,7 +34,7 @@ final class GlooAPIServiceTests: XCTestCase {
             confidence: 0.89,
             probabilities: ["sleepless": 0.89]
         )
-        let prefs = GlooAPIService.UserPreferences(translation: "NIV", language: "en")
+        let prefs = GlooRequest.UserPreferences(translation: "NIV", language: "en")
 
         let response = try await sut.fetchVerse(for: classification, preferences: prefs)
 
@@ -43,7 +50,7 @@ final class GlooAPIServiceTests: XCTestCase {
         )!
 
         let classification = EmotionClassification(state: .unknown, confidence: 0.0, probabilities: [:])
-        let prefs = GlooAPIService.UserPreferences(translation: "NIV", language: "en")
+        let prefs = GlooRequest.UserPreferences(translation: "NIV", language: "en")
 
         do {
             _ = try await sut.fetchVerse(for: classification, preferences: prefs)
