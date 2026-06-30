@@ -1,0 +1,18 @@
+# Xcode
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.xcscmblueprint
+
+# Secrets — never commit
+Pulse/Pulse/Secrets.swift
+
+# macOS
+.DS_Store
+
+# Superpowers ledger (session scratch — git log is the durable record)
+.superpowers/
