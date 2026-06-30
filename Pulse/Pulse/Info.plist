@@ -2,9 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Pulse reads your heart rate, HRV, and sleep data to understand how you're feeling and deliver a scripture verse at the right moment.</string>
 	<key>UIBackgroundModes</key>
 	<array>
-		<string></string>
+		<string>fetch</string>
+		<string>processing</string>
 	</array>
 </dict>
 </plist>
