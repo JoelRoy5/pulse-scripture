@@ -82,8 +82,9 @@ final class HealthKitManager: ObservableObject {
         for identifier in typesToObserve {
             let type = HKQuantityType(identifier)
             store.enableBackgroundDelivery(for: type, frequency: .immediate) { _, _ in }
-            let query = HKObserverQuery(sampleType: type, predicate: nil) { _, _, _ in
+            let query = HKObserverQuery(sampleType: type, predicate: nil) { _, completionHandler, _ in
                 handler()
+                completionHandler?()
             }
             store.execute(query)
         }
@@ -95,8 +96,10 @@ final class HealthKitManager: ObservableObject {
                                  unit: HKUnit) async -> Double? {
         let type = HKQuantityType(identifier)
         let sort = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+        let anchor = Date().addingTimeInterval(-86400 * 2)
+        let predicate = HKQuery.predicateForSamples(withStart: anchor, end: nil)
         return await withCheckedContinuation { continuation in
-            let query = HKSampleQuery(sampleType: type, predicate: nil,
+            let query = HKSampleQuery(sampleType: type, predicate: predicate,
                                       limit: 1, sortDescriptors: [sort]) { _, samples, _ in
                 let value = (samples?.first as? HKQuantitySample)?.quantity.doubleValue(for: unit)
                 continuation.resume(returning: value)
