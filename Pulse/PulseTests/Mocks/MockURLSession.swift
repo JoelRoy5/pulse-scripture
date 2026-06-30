@@ -1,12 +1,6 @@
 // PulseTests/Mocks/MockURLSession.swift
 import Foundation
 
-protocol URLSessionProtocol {
-    func data(for request: URLRequest) async throws -> (Data, URLResponse)
-}
-
-extension URLSession: URLSessionProtocol {}
-
 final class MockURLSession: URLSessionProtocol {
     var stubbedData: Data = Data()
     var stubbedResponse: URLResponse = HTTPURLResponse(
