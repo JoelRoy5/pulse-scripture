@@ -1,5 +1,20 @@
 import HealthKit
 
+// MARK: - Protocol (enables mocking in tests)
+
+@MainActor
+protocol HealthKitManagerProtocol {
+    func latestHRV() async -> Double?
+    func latestHeartRate() async -> Double?
+    func restingHeartRate() async -> Double?
+    func latestRespiratoryRate() async -> Double?
+    func latestBloodOxygen() async -> Double?
+    func latestWristTemp() async -> Double?
+    func sleepSummary(for date: Date) async -> SleepSummary
+}
+
+// MARK: - Sleep summary
+
 struct SleepSummary {
     let efficiency: Double       // 0.0–1.0
     let deepSleepPct: Double
@@ -12,7 +27,7 @@ struct SleepSummary {
 }
 
 @MainActor
-final class HealthKitManager {
+final class HealthKitManager: HealthKitManagerProtocol {
     private let store = HKHealthStore()
 
     private let readTypes: Set<HKObjectType> = [
