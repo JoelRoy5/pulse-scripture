@@ -1,5 +1,13 @@
 import Foundation
 
+// MARK: - Protocol (enables mocking in tests)
+
+protocol GlooAPIServiceProtocol {
+    func fetchVerse(for classification: EmotionClassification,
+                    biometricContext: BiometricContext?,
+                    preferences: GlooRequest.UserPreferences) async throws -> GlooResponse
+}
+
 final class GlooAPIService {
     enum APIError: Error {
         case httpError(Int)
@@ -80,6 +88,8 @@ final class GlooAPIService {
         )
     }
 }
+
+extension GlooAPIService: GlooAPIServiceProtocol {}
 
 struct BiometricContext {
     let hrvSdnn: Double?

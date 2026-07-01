@@ -1,5 +1,11 @@
 import Foundation
 
+// MARK: - Protocol (enables mocking in tests)
+
+protocol YouVersionAPIServiceProtocol {
+    func fetchVerse(reference: String, versionId: Int) async throws -> ScriptureVerse
+}
+
 final class YouVersionAPIService {
     enum APIError: Error {
         case httpError(Int)
@@ -55,3 +61,5 @@ final class YouVersionAPIService {
         }
     }
 }
+
+extension YouVersionAPIService: YouVersionAPIServiceProtocol {}

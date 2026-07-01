@@ -1,5 +1,14 @@
 import Foundation
 
+// MARK: - TriggerDetectorProtocol (enables mocking in tests)
+
+protocol TriggerDetectorProtocol {
+    func evaluate(hrv: Double?, restingHR: Double?, currentHR: Double?,
+                  sleep: SleepSummary, hour: Int, workoutActive: Bool,
+                  canDeliver: Bool, hoursSinceLastVerse: Double,
+                  hrWasElevatedPostWorkout: Bool) -> TriggerReason?
+}
+
 // MARK: - TriggerReason
 
 enum TriggerReason: Equatable {
@@ -68,6 +77,10 @@ final class TriggerDetector {
         return nil
     }
 }
+
+// MARK: - Protocol conformance
+
+extension TriggerDetector: TriggerDetectorProtocol {}
 
 // MARK: - Static convenience (BiometricFeatures / VerseCache interface)
 

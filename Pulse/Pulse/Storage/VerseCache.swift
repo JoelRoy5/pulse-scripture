@@ -1,5 +1,13 @@
 import Foundation
 
+// MARK: - VerseCacheProtocol (enables mocking in tests)
+
+protocol VerseCacheProtocol {
+    var canDeliver: Bool { get }
+    var currentVerse: ScriptureVerse? { get }
+    func store(verse: ScriptureVerse)
+}
+
 // MARK: - Clock Protocol
 
 protocol Clock {
@@ -114,3 +122,5 @@ final class VerseCache {
     /// on UserDefaults in the iOS 26 SDK), which causes a runtime crash in tests.
     nonisolated deinit {}
 }
+
+extension VerseCache: VerseCacheProtocol {}
