@@ -8,7 +8,8 @@ struct PulseApp: App {
         hkManager: HealthKitManager(),
         glooService: GlooAPIService(apiKey: Secrets.glooAPIKey),
         youVersion: YouVersionAPIService(apiKey: Secrets.youVersionAPIKey),
-        preferences: GlooRequest.UserPreferences(translation: "NIV", language: "en")
+        preferences: GlooRequest.UserPreferences(translation: "NIV", language: "en"),
+        watchBridge: PhoneSessionManager.shared
     )
 
     var body: some Scene {

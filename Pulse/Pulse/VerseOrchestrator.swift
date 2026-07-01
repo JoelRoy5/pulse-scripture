@@ -23,6 +23,7 @@ final class VerseOrchestrator {
     private let cache: any VerseCacheProtocol
     private let trigger: any TriggerDetectorProtocol
     private let preferences: GlooRequest.UserPreferences
+    private let watchBridge: (any WatchBridgeProtocol)?
 
     // hkManager has no default: HealthKitManager.init() is explicitly @MainActor and
     // cannot be called from a nonisolated default-parameter-expression context.
@@ -34,7 +35,8 @@ final class VerseOrchestrator {
         youVersion: any YouVersionAPIServiceProtocol,
         cache: any VerseCacheProtocol = VerseCache(),
         trigger: any TriggerDetectorProtocol = TriggerDetector(),
-        preferences: GlooRequest.UserPreferences
+        preferences: GlooRequest.UserPreferences,
+        watchBridge: (any WatchBridgeProtocol)? = nil
     ) {
         self.hkManager = hkManager
         self.inference = inference
@@ -43,6 +45,7 @@ final class VerseOrchestrator {
         self.cache = cache
         self.trigger = trigger
         self.preferences = preferences
+        self.watchBridge = watchBridge
         self.currentVerse = cache.currentVerse
     }
 
@@ -101,6 +104,16 @@ final class VerseOrchestrator {
             )
             cache.store(verse: finalVerse)
             currentVerse = finalVerse
+
+            // Push the new verse to the paired Watch.
+            let sharedVerse = SharedVerse(
+                reference: finalVerse.reference,
+                displayLabel: finalVerse.displayLabel,
+                text: finalVerse.text,
+                reflection: finalVerse.reflection,
+                deliveredAt: finalVerse.deliveredAt
+            )
+            watchBridge?.sendVerse(sharedVerse)
         } catch {
             // Silently fail — never surface errors to the user.
             // Network / API errors are transient; the next scheduled run will retry.
