@@ -5,6 +5,7 @@ import Foundation
 protocol VerseCacheProtocol {
     var canDeliver: Bool { get }
     var currentVerse: ScriptureVerse? { get }
+    var hoursSinceLastVerse: Double { get }
     func store(verse: ScriptureVerse)
 }
 
@@ -51,6 +52,14 @@ final class VerseCache {
         let stored = defaults.double(forKey: Keys.cooldownDuration)
         let effective = stored > 0 ? stored : baseCooldown
         return clock.now.timeIntervalSince(last) >= effective
+    }
+
+    /// Hours elapsed since the last verse was delivered, or `Double.infinity` if none.
+    var hoursSinceLastVerse: Double {
+        guard let last = defaults.object(forKey: Keys.lastDelivery) as? Date else {
+            return Double.infinity
+        }
+        return Date().timeIntervalSince(last) / 3600
     }
 
     /// `true` between 10 pm and 6 am local time.

@@ -14,6 +14,7 @@ final class MockGlooAPIService: GlooAPIServiceProtocol {
     ) async throws -> GlooResponse {
         callCount += 1
         if let error = stubbedError { throw error }
-        return stubbedResponse!
+        guard let response = stubbedResponse else { throw CancellationError() }
+        return response
     }
 }

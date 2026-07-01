@@ -6,6 +6,7 @@ final class MockVerseCache: VerseCacheProtocol {
     var canDeliver: Bool = true
     var currentVerse: ScriptureVerse? = nil
     var storedVerse: ScriptureVerse? = nil
+    var hoursSinceLastVerse: Double = 0
 
     func store(verse: ScriptureVerse) {
         storedVerse = verse

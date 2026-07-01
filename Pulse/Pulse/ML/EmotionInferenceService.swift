@@ -1,5 +1,13 @@
 import Foundation
 
+// MARK: - EmotionInferenceServiceProtocol
+
+protocol EmotionInferenceServiceProtocol {
+    func classify(features: BiometricFeatures) -> EmotionClassification
+}
+
+// MARK: - EmotionInferenceService
+
 final class EmotionInferenceService {
     // STUB: Returns rule-based classification until partner's CoreML model is ready.
     // To integrate the real model:
@@ -46,3 +54,5 @@ final class EmotionInferenceService {
         return .unknown
     }
 }
+
+extension EmotionInferenceService: EmotionInferenceServiceProtocol {}

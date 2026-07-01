@@ -17,7 +17,7 @@ final class VerseOrchestrator {
     var currentVerse: ScriptureVerse?
 
     private let hkManager: any HealthKitManagerProtocol
-    private let inference: EmotionInferenceService
+    private let inference: any EmotionInferenceServiceProtocol
     private let glooService: any GlooAPIServiceProtocol
     private let youVersion: any YouVersionAPIServiceProtocol
     private let cache: any VerseCacheProtocol
@@ -29,7 +29,7 @@ final class VerseOrchestrator {
     // Callers in a @MainActor context (PulseApp, tests) pass it explicitly.
     init(
         hkManager: any HealthKitManagerProtocol,
-        inference: EmotionInferenceService = EmotionInferenceService(),
+        inference: any EmotionInferenceServiceProtocol = EmotionInferenceService(),
         glooService: any GlooAPIServiceProtocol,
         youVersion: any YouVersionAPIServiceProtocol,
         cache: any VerseCacheProtocol = VerseCache(),
@@ -70,7 +70,7 @@ final class VerseOrchestrator {
             hrv: hrvVal, restingHR: restingVal, currentHR: currentVal,
             sleep: sleepVal, hour: hour, workoutActive: false,
             canDeliver: cache.canDeliver,
-            hoursSinceLastVerse: 0,
+            hoursSinceLastVerse: cache.hoursSinceLastVerse,
             hrWasElevatedPostWorkout: false
         ) != nil else { return }
 

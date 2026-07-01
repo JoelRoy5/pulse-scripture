@@ -12,6 +12,7 @@ final class VerseOrchestratorTests: XCTestCase {
     private var mockYouVersion: MockYouVersionAPIService!
     private var mockCache: MockVerseCache!
     private var mockTrigger: MockTriggerDetector!
+    private var mockInference: MockEmotionInferenceService!
 
     override func setUp() {
         super.setUp()
@@ -20,6 +21,7 @@ final class VerseOrchestratorTests: XCTestCase {
         mockYouVersion = MockYouVersionAPIService()
         mockCache      = MockVerseCache()
         mockTrigger    = MockTriggerDetector()
+        mockInference  = MockEmotionInferenceService()
 
         // Happy-path defaults
         mockTrigger.stubbedReason = .fallback24Hour
@@ -46,6 +48,7 @@ final class VerseOrchestratorTests: XCTestCase {
         mockYouVersion = nil
         mockCache      = nil
         mockTrigger    = nil
+        mockInference  = nil
         super.tearDown()
     }
 
@@ -55,7 +58,7 @@ final class VerseOrchestratorTests: XCTestCase {
         // All dependencies injected explicitly — no @MainActor defaults required.
         VerseOrchestrator(
             hkManager:   mockHK,
-            inference:   EmotionInferenceService(),
+            inference:   mockInference,
             glooService:  mockGloo,
             youVersion:   mockYouVersion,
             cache:        mockCache,
@@ -147,6 +150,23 @@ final class VerseOrchestratorTests: XCTestCase {
         await sut.run()
 
         XCTAssertNil(mockCache.storedVerse, "No verse stored on YouVersion error")
+    }
+
+    // MARK: - 24-hour fallback trigger
+
+    func test_run_fetchesVerse_whenFallback24HourTriggerFires() async {
+        // Arrange: simulate 25 hours since last verse with fallback trigger active
+        mockCache.canDeliver = true
+        mockCache.hoursSinceLastVerse = 25
+        mockTrigger.stubbedReason = .fallback24Hour
+        let sut = makeSUT()
+
+        // Act
+        await sut.run()
+
+        // Assert: Gloo was called once, meaning the fallback path completed
+        XCTAssertEqual(mockGloo.callCount, 1, "Gloo should be called when fallback24Hour trigger fires")
+        XCTAssertNotNil(mockCache.storedVerse, "Verse should be stored after fallback24Hour trigger")
     }
 
     // MARK: - versionId mapping
