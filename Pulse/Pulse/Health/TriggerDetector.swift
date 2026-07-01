@@ -16,10 +16,12 @@ typealias DeliveryTrigger = TriggerReason
 // MARK: - TriggerDetector
 
 final class TriggerDetector {
-    private let morningHours = 5...10
-    private let nightHours: [Int] = [1, 2, 3, 4, 5]
+    private let morningHours = 5...9
+    private let nightHours: [Int] = [0, 1, 2, 3, 4, 5]
+    private let daytimeHours = 9...22
     private let stressHRDeltaThreshold = 20.0
-    private let lateNightHRDeltaThreshold = 15.0
+    private let morningHRVThreshold = 30.0
+    private let stressHRVThreshold = 40.0
 
     func evaluate(
         hrv: Double?,
@@ -36,31 +38,31 @@ final class TriggerDetector {
 
         let hrDelta = (currentHR ?? 0) - (restingHR ?? 0)
 
-        // 24-hour fallback — fires in the morning window if no verse has been delivered
-        if hoursSinceLastVerse >= 24 && morningHours.contains(hour) {
-            return .fallback24Hour
-        }
-
-        // Late-night wakefulness: user woke during 1–5 am with elevated HR
-        if sleep.hadLateNightWakefulness && hrDelta > lateNightHRDeltaThreshold
-            && nightHours.contains(hour) && !workoutActive {
-            return .lateNightWakefulness
-        }
-
-        // Morning HRV: HRV data available during morning window, not in a workout
-        if morningHours.contains(hour) && hrv != nil && !workoutActive {
+        // Priority 1: Morning HRV — hour 5–9, HRV < 30ms
+        if morningHours.contains(hour), let hrv, hrv < morningHRVThreshold, !workoutActive {
             return .morningHRVAvailable
         }
 
-        // Post-workout recovery: HR was elevated after workout and has settled back toward resting
+        // Priority 2: Late-night wakefulness — woke during 12am–5am
+        if sleep.hadLateNightWakefulness && nightHours.contains(hour) && !workoutActive {
+            return .lateNightWakefulness
+        }
+
+        // Priority 3: Post-workout recovery — HR elevated post-workout and settling
         if hrWasElevatedPostWorkout && hrDelta < 15 && !workoutActive {
             return .postWorkoutRecovery
         }
 
-        // Sustained stress: HR significantly above resting while not in a workout
-        if !workoutActive && hrDelta > stressHRDeltaThreshold {
-            if nightHours.contains(hour) { return .lateNightWakefulness }
+        // Priority 4: Sustained daytime stress — HRV < 40ms AND HR elevated AND hour 9–22
+        if !workoutActive && daytimeHours.contains(hour),
+           let hrv, hrv < stressHRVThreshold,
+           hrDelta > stressHRDeltaThreshold {
             return .sustainedDaytimeStress
+        }
+
+        // Priority 5: 24h fallback
+        if hoursSinceLastVerse >= 24 {
+            return .fallback24Hour
         }
 
         return nil

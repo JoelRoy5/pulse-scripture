@@ -68,13 +68,13 @@ final class TriggerDetectorTests: XCTestCase {
         XCTAssertEqual(reason, .fallback24Hour)
     }
 
-    func test_fallback24Hour_doesNotFireOutsideMorning() {
+    func test_fallback24Hour_firesAtAnyHour() {
+        // Fallback has no time restriction — fires whenever >24h has elapsed
         let reason = sut.evaluate(hrv: 50, restingHR: 60, currentHR: 62,
                                   sleep: .empty, hour: 14,
                                   workoutActive: false, canDeliver: true,
                                   hoursSinceLastVerse: 25)
-        // hour 14 is not in morningHours (5...10), so fallback doesn't fire
-        XCTAssertNil(reason)
+        XCTAssertEqual(reason, .fallback24Hour)
     }
 
     // MARK: - Post-workout recovery
@@ -98,13 +98,13 @@ final class TriggerDetectorTests: XCTestCase {
 
     // MARK: - Priority order
 
-    func test_lateNightWakefulness_takesPriorityOverMorningHRV() {
-        // hour 5 is in both morningHours and nightHours
+    func test_morningHRV_takesPriorityOverLateNightWakefulness() {
+        // hour 5 is in both morningHours (5-9) and nightHours (0-5)
+        // morningHRVAvailable is priority 1; lateNightWakefulness is priority 2
         let reason = sut.evaluate(hrv: 18, restingHR: 65, currentHR: 85,
                                   sleep: makeSleep(lateWake: true), hour: 5,
                                   workoutActive: false, canDeliver: true)
-        // lateNightWakefulness check runs before morningHRVAvailable
-        XCTAssertEqual(reason, .lateNightWakefulness)
+        XCTAssertEqual(reason, .morningHRVAvailable)
     }
 
     // MARK: - Helpers
