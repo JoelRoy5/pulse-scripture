@@ -2,45 +2,72 @@ import SwiftUI
 
 // MARK: - SettingsView
 //
-// Placeholder root view until Task 13 (Onboarding) replaces this with OnboardingView.
-// Referenced by PulseApp.swift as the WindowGroup root.
+// Main app screen shown after onboarding completes.
+// Displays the current scripture verse, a Bible translation picker,
+// a manual trigger button, and a delivery-in-progress indicator.
 
 struct SettingsView: View {
     @Environment(VerseOrchestrator.self) private var orchestrator
+    @AppStorage("preferredTranslation") private var preferredTranslation = "NIV"
+
+    private let translations = ["NIV", "ESV", "KJV", "NLT"]
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Image(systemName: "waveform.path.ecg.rectangle")
-                    .font(.system(size: 64))
-                    .foregroundStyle(.tint)
+            List {
+                // MARK: Current verse
 
-                Text("Pulse")
-                    .font(.largeTitle.bold())
-
-                if let verse = orchestrator.currentVerse {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(verse.displayLabel)
-                            .font(.headline)
-                        Text(verse.text)
-                            .font(.body)
-                            .italic()
-                    }
-                    .padding()
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .padding(.horizontal)
-                } else {
-                    Text("Waiting for your first verse…")
+                Section("Current Verse") {
+                    if let verse = orchestrator.currentVerse {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(verse.text)
+                                .font(.callout)
+                                .italic()
+                            Text(verse.displayLabel)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                    } else {
+                        Label(
+                            "No verse yet — Pulse is listening.",
+                            systemImage: "waveform.path.ecg"
+                        )
                         .foregroundStyle(.secondary)
+                    }
                 }
 
-                Button("Run Pipeline") {
-                    Task { await orchestrator.run() }
+                // MARK: Preferences
+
+                Section("Preferences") {
+                    Picker("Translation", selection: $preferredTranslation) {
+                        ForEach(translations, id: \.self) { translation in
+                            Text(translation).tag(translation)
+                        }
+                    }
                 }
-                .buttonStyle(.borderedProminent)
+
+                // MARK: Controls
+
+                Section {
+                    Button {
+                        Task { await orchestrator.run() }
+                    } label: {
+                        if orchestrator.isDelivering {
+                            HStack {
+                                ProgressView()
+                                    .controlSize(.small)
+                                Text("Delivering verse…")
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            Label("Request verse now", systemImage: "arrow.clockwise")
+                        }
+                    }
+                    .disabled(orchestrator.isDelivering)
+                }
             }
-            .navigationTitle("Settings")
-            .padding()
+            .navigationTitle("Pulse")
         }
     }
 }
@@ -48,16 +75,16 @@ struct SettingsView: View {
 #Preview {
     SettingsView()
         .environment(VerseOrchestrator(
-            hkManager: PreviewHealthKitManager(),
-            glooService: PreviewGlooService(),
-            youVersion: PreviewYouVersionService(),
+            hkManager: SettingsPreviewHKManager(),
+            glooService: SettingsPreviewGlooService(),
+            youVersion: SettingsPreviewYouVersionService(),
             preferences: GlooRequest.UserPreferences(translation: "NIV", language: "en")
         ))
 }
 
 // MARK: - Preview stubs
 
-private final class PreviewHealthKitManager: HealthKitManagerProtocol {
+private final class SettingsPreviewHKManager: HealthKitManagerProtocol {
     func latestHRV() async -> Double?             { nil }
     func latestHeartRate() async -> Double?       { nil }
     func restingHeartRate() async -> Double?      { nil }
@@ -67,7 +94,7 @@ private final class PreviewHealthKitManager: HealthKitManagerProtocol {
     func sleepSummary(for date: Date) async -> SleepSummary { .empty }
 }
 
-private final class PreviewGlooService: GlooAPIServiceProtocol {
+private final class SettingsPreviewGlooService: GlooAPIServiceProtocol {
     func fetchVerse(for classification: EmotionClassification,
                     biometricContext: BiometricContext?,
                     preferences: GlooRequest.UserPreferences) async throws -> GlooResponse {
@@ -76,7 +103,7 @@ private final class PreviewGlooService: GlooAPIServiceProtocol {
     }
 }
 
-private final class PreviewYouVersionService: YouVersionAPIServiceProtocol {
+private final class SettingsPreviewYouVersionService: YouVersionAPIServiceProtocol {
     func fetchVerse(reference: String, versionId: Int) async throws -> ScriptureVerse {
         ScriptureVerse(reference: reference, displayLabel: "Psalm 4:8",
                        text: "In peace I will lie down and sleep.", translation: "NIV",

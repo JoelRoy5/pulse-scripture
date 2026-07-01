@@ -15,6 +15,7 @@ import Observation
 @Observable
 final class VerseOrchestrator {
     var currentVerse: ScriptureVerse?
+    var isDelivering: Bool = false
 
     private let hkManager: any HealthKitManagerProtocol
     private let inference: any EmotionInferenceServiceProtocol
@@ -53,6 +54,8 @@ final class VerseOrchestrator {
 
     func run() async {
         guard cache.canDeliver else { return }
+        isDelivering = true
+        defer { isDelivering = false }
 
         // Fetch all biometrics concurrently (each awaits its HealthKit callback while
         // the main actor is free to process other work).

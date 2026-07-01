@@ -12,11 +12,18 @@ struct PulseApp: App {
         watchBridge: PhoneSessionManager.shared
     )
 
+    @AppStorage("onboardingComplete") private var onboardingComplete = false
+
     var body: some Scene {
         WindowGroup {
-            // OnboardingView added in Task 13 — SettingsView is the root until then.
-            SettingsView()
-                .environment(orchestrator)
+            Group {
+                if onboardingComplete {
+                    SettingsView()
+                } else {
+                    OnboardingView()
+                }
+            }
+            .environment(orchestrator)
         }
     }
 }
