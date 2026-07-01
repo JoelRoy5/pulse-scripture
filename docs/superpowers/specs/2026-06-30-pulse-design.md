@@ -62,18 +62,17 @@ This separation is both a privacy win and an architectural win: the CoreML model
 ---
 
 ## Data Layer (V1 Scope)
-
 ### HealthKit Signals Read by iOS App
+To calculate your 13-feature vector, iOS app must read the following native signals directly from the shared HealthKit database.
 
-| Signal | HealthKit Identifier | Notes |
-|---|---|---|
-| HRV SDNN | `heartRateVariabilitySDNN` | Primary stress/recovery signal. Measured overnight. |
-| Heart Rate | `heartRate` | Real-time. Watch writes continuously. |
-| Resting Heart Rate | `restingHeartRate` | Apple-computed daily baseline. |
-| Sleep Analysis | `sleepAnalysis` | Stages: Deep, REM, Core, Awake. Requires Series 4+ / watchOS 9+. |
-| Respiratory Rate | `respiratoryRate` | Elevated during anxiety; measured passively during sleep. |
-| Blood Oxygen | `oxygenSaturation` | Spot checks; secondary signal. |
-| Wrist Temperature | `appleSleepingWristTemperature` | Series 8+ / Ultra only; graceful fallback if unavailable. |
+Signal | HealthKit Identifier | Pipeline Purpose
+HRV SDNN | heartRateVariabilitySDNN | Passed natively as hrv_sdnn; historical data is used to calculate hrv_7day_slope.
+Beat-to-Beat Data | heartbeatSeries / heartRate | Required to calculate or approximate rmssd for acute stress.
+Heart Rate | heartRate | Real-time continuous reads, required to calculate hr_delta_from_resting.
+Resting Heart Rate | restingHeartRate | Apple-computed daily baseline, required to calculate hr_delta_from_resting.
+Sleep Analysis | sleepAnalysis | Raw stages (Deep, REM, Core, Awake) required to derive all 5 sleep-related metrics.
+Respiratory Rate | respiratoryRate | Passed natively as respiratory_rate.
+Wrist Temperature | appleSleepingWristTemperature | Apple-computed baseline, required to calculate wrist_temp_delta.
 
 ### How iOS Reads Watch Data
 
@@ -81,34 +80,20 @@ Apple Watch writes all sensor data into the shared HealthKit database. The iOS a
 
 ### Feature Vector (input to CoreML model)
 
-```swift
-struct BiometricFeatures {
-    // HRV
-    var hrv_sdnn: Double              // ms, current reading
-    var hrv_7day_slope: Double        // normalized trend (-1 declining → +1 improving)
-
-    // Heart rate
-    var hr_delta_from_resting: Double // current HR minus resting HR (bpm)
-
-    // Sleep
-    var sleep_efficiency: Double      // 0.0–1.0
-    var deep_sleep_pct: Double        // 0.0–1.0
-    var rem_pct: Double               // 0.0–1.0
-    var awakening_count: Double       // count of wake events
-    var late_night_wakefulness: Double // 1.0 if wake between 1am–5am, else 0.0
-
-    // Respiratory + oxygen
-    var respiratory_rate: Double      // breaths/min
-    var blood_oxygen: Double          // percentage (0–100)
-
-    // Temperature
-    var wrist_temp_delta: Double      // °C deviation from personal baseline
-
-    // Time context (cyclical encoding avoids midnight discontinuity)
-    var time_of_day_sin: Double       // sin(2π * hour / 24)
-    var time_of_day_cos: Double       // cos(2π * hour / 24)
-}
-```
+Feature | Category | Source / Calculation Method
+hrv_sdnn | Native | Read directly from native Apple Watch sensors.
+respiratory_rate | Native | Read directly from native Apple Watch sensors.
+rmssd | Calculated | Approximated from raw beat-to-beat HealthKit data.
+hr_delta_from_resting | Calculated | Current heartRate minus the daily restingHeartRate baseline.
+wrist_temp_delta | Calculated | Current deviation from the appleSleepingWristTemperature baseline.
+hrv_7day_slope | Calculated | Trend generated over a rolling 7-day window of SDNN data.
+time_of_day_sin | Calculated | Sine transformation of the current hour.
+time_of_day_cos | Calculated | Cosine transformation of the current hour.
+sleep_efficiency | Derived | Calculated from raw sleepAnalysis stages.
+deep_sleep_pct | Derived | Calculated from raw sleepAnalysis stages.
+rem_pct | Derived | Calculated from raw sleepAnalysis stages.
+awakening_count | Derived | Calculated from raw sleepAnalysis stages.
+late_night_wakefulness | Derived | Boolean state calculated from sleepAnalysis.
 
 ### Emotional State Classes
 
