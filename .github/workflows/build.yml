@@ -15,6 +15,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Create Secrets stub
+        run: |
+          cat > Pulse/Pulse/Secrets.swift << 'EOF'
+          enum Secrets {
+              static let glooAPIKey = ""
+              static let youVersionAPIKey = ""
+          }
+          EOF
+
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
