@@ -156,6 +156,7 @@ private final class PreviewHKManager: HealthKitManagerProtocol {
     func latestBloodOxygen() async -> Double?     { nil }
     func latestWristTemp() async -> Double?       { nil }
     func sleepSummary(for date: Date) async -> SleepSummary { .empty }
+    func enableBackgroundDelivery(handler: @escaping () -> Void) { }
 }
 
 private final class PreviewGlooSvc: GlooAPIServiceProtocol {

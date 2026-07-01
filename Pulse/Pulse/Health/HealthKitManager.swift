@@ -11,6 +11,11 @@ protocol HealthKitManagerProtocol {
     func latestBloodOxygen() async -> Double?
     func latestWristTemp() async -> Double?
     func sleepSummary(for date: Date) async -> SleepSummary
+    /// Enables HealthKit background delivery and sets up an observer query so the
+    /// app is woken when new HRV or heart-rate samples arrive from the Watch.
+    /// `handler` is invoked on every new-data notification; callers should
+    /// dispatch non-trivial work to a Task rather than blocking the callback.
+    func enableBackgroundDelivery(handler: @escaping () -> Void)
 }
 
 // MARK: - Sleep summary

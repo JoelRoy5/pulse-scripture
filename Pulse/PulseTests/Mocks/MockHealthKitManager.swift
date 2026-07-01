@@ -12,6 +12,9 @@ final class MockHealthKitManager: HealthKitManagerProtocol {
     var stubbedWristTemp: Double?       = nil
     var stubbedSleep: SleepSummary      = .empty
 
+    var backgroundDeliveryCallCount = 0
+    var capturedHandler: (() -> Void)?
+
     func latestHRV() async -> Double?            { stubbedHRV }
     func latestHeartRate() async -> Double?      { stubbedHeartRate }
     func restingHeartRate() async -> Double?     { stubbedRestingHR }
@@ -19,4 +22,8 @@ final class MockHealthKitManager: HealthKitManagerProtocol {
     func latestBloodOxygen() async -> Double?    { stubbedBloodOxygen }
     func latestWristTemp() async -> Double?      { stubbedWristTemp }
     func sleepSummary(for date: Date) async -> SleepSummary { stubbedSleep }
+    func enableBackgroundDelivery(handler: @escaping () -> Void) {
+        backgroundDeliveryCallCount += 1
+        capturedHandler = handler
+    }
 }

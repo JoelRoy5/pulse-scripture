@@ -124,12 +124,12 @@ final class BiometricPayloadBuilderTests: XCTestCase {
 
     // MARK: - BiometricContext
 
-    func test_context_hrvSdnn_roundedToOneDecimal() {
+    func test_context_hrvSdnn_roundedToOneDecimal() throws {
         let (_, context) = BiometricPayloadBuilder.build(
             hrv: 42.567, restingHR: nil, currentHR: nil,
             sleep: .empty, respiratory: nil, bloodOxygen: nil, wristTemp: nil
         )
-        XCTAssertEqual(context.hrvSdnn, 42.6, accuracy: 0.01)
+        XCTAssertEqual(try XCTUnwrap(context.hrvSdnn), 42.6, accuracy: 0.01)
     }
 
     func test_context_hrDelta_nilWhenNotPositive() {

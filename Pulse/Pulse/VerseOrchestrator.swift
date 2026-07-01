@@ -50,6 +50,19 @@ final class VerseOrchestrator {
         self.currentVerse = cache.currentVerse
     }
 
+    // MARK: - Background Observation
+
+    /// Enables HealthKit background delivery so the pipeline fires automatically
+    /// when the Apple Watch writes new HRV or heart-rate samples — even while
+    /// the app is suspended. Must be called from a @MainActor context (e.g.
+    /// PulseApp's .onAppear) because HealthKitManagerProtocol is @MainActor.
+    @MainActor
+    func startBackgroundObservation() {
+        hkManager.enableBackgroundDelivery {
+            Task { await self.run() }
+        }
+    }
+
     // MARK: - Pipeline
 
     func run() async {

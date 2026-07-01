@@ -24,6 +24,17 @@ struct PulseApp: App {
                 }
             }
             .environment(orchestrator)
+            .onAppear {
+                // Start HealthKit background delivery after the first view appears.
+                // This is safe to call multiple times — HealthKit deduplicates observers.
+                // Requires HealthKit authorization to already have been granted (onboarding).
+                orchestrator.startBackgroundObservation()
+            }
+        }
+        // BGAppRefresh fallback: iOS wakes the app on its own schedule (~daily).
+        // Requires "com.pulse.refresh" in BGTaskSchedulerPermittedIdentifiers (Info.plist).
+        .backgroundTask(.appRefresh("com.pulse.refresh")) {
+            await orchestrator.run()
         }
     }
 }
