@@ -127,30 +127,40 @@ The CoreML model outputs probabilities across 8 states:
 
 ---
 
-## ML Model: Training Plan
+ML Model: Training Plan
 
-### Goal
-Train a multiclass classifier that maps a biometric feature vector to one of the 8 emotional states above. Export to CoreML for on-device inference.
+Goal
+Train a multiclass classifier that maps a biometric feature vector to one of the 8 emotional states above. Export to CoreML for fast, private, on-device inference.
 
-### Training Data Sources
+Training Data Sources
 
-1. **WESAD dataset** (public, free) — Wearable Stress and Affect Detection. Physiological signals (respiration, HR, skin conductance) labeled with stress / amusement / neutral. Note: WESAD signals don't map perfectly to Apple Watch outputs (no SDNN, no sleep stages) — feature engineering bridges this gap but introduces approximation.
-2. **Clinically-derived synthetic data** (primary source for sleep/HRV states) — HRV and HR correlations with emotional states are well-established in the literature (Thayer & Lane, Kim et al., Shaffer & Ginsberg). Generate labeled biometric profiles for each state using published clinical ranges as priors. This is the more reliable source for our specific feature set.
-3. **Kaggle notebook** documents both sources, the feature engineering pipeline, model training, evaluation (confusion matrix, per-class F1), and CoreML export.
+    WESAD dataset (public, free): Wearable Stress and Affect Detection. Physiological signals labeled with stress, amusement, and neutral states.
 
-### Model Architecture
-Random Forest (100 estimators, max_depth=8). Handles missing values (not all signals available on all devices), interpretable for the writeup, performs well on small tabular datasets. If evaluation shows underfitting, switch to Gradient Boosting.
+    Clinically-derived synthetic data: Generates labeled biometric profiles using published clinical ranges (Thayer & Lane, Kim et al., Shaffer & Ginsberg) to reliably map HRV and HR correlations with emotional states.
 
-### Export
-```python
-import coremltools as ct
-coreml_model = ct.converters.sklearn.convert(rf_model, feature_names, 'emotionalState')
-coreml_model.save('PulseEmotionClassifier.mlmodel')
-```
+    Kaggle Notebook: Documents both sources, the feature engineering pipeline, model training, evaluation, and CoreML export.
 
-The `.mlmodel` file is bundled with the iOS app. No network call required for inference.
+Feature Engineering & Processing
 
----
+    Time-Based Feature Encoding: Instead of raw time variables, encode the time of day using sine and cosine transformations to help the model understand cyclical circadian rhythms.
+
+    RMSSD Approximation: Supplement the native SDNN signal by calculating or approximating RMSSD from raw beat-to-beat HealthKit data, capturing a gold-standard metric for real-time acute stress.
+
+Model Architecture
+
+    XGBoost / LightGBM: Selected over a standard Random Forest to natively handle HealthKit data sparsity and missing values (NaN) without requiring heavy imputation layers. This ensures high accuracy even when watch background reads are delayed.
+
+Export & Optimization
+
+    The .mlmodel file is bundled with the iOS app, requiring no network call for inference.
+
+    Model Compression: Use coremltools to apply 8-bit quantization during the CoreML conversion. This drastically reduces the model's footprint to respect strict watchOS memory and battery constraints while maintaining accuracy.
+
+V2 Roadmap (Post-Competition)
+
+    Temporal & Sequential Modeling: Shift from a tabular snapshot classifier to a lightweight 1D Convolutional Neural Network (CNN) or LSTM to evaluate the slope and trend of biometrics over a rolling 5-day window.
+
+    On-Device Personalization: Utilize updatable CoreML models to allow users to flag inaccurate state predictions. This ground-truth feedback will incrementally retrain the model to map to the user's highly specific physiological baseline.
 
 ## Delivery Logic
 

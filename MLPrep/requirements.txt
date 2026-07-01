@@ -1,0 +1,16 @@
+# --- Core Data Manipulation & Math ---
+numpy       # For synthetic biometric generation and cyclical time encoding
+scipy       # For synthetic biometric generation and statistical functions
+pandas      # For managing the generated records and WESAD dataset
+
+# --- Machine Learning Algorithms ---
+xgboost     # Primary algorithm choice for native HealthKit data sparsity handling
+lightgbm    # Alternative gradient boosting framework as defined in the architecture
+scikit-learn # Essential for dataset splitting, cross-validation, and metrics
+
+# --- Apple CoreML Integration ---
+coremltools # Required for CoreML .mlmodel conversion and 8-bit quantization
+
+# --- Future V2 Roadmap (Optional/Preparatory) ---
+# Uncomment below if you begin transitioning to sequential modeling (1D CNN/LSTM)
+# torch
