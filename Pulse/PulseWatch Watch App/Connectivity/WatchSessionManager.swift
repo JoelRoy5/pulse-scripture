@@ -1,5 +1,6 @@
 import WatchConnectivity
 import Combine
+import WidgetKit
 
 // MARK: - WatchSessionManager
 
@@ -25,6 +26,16 @@ final class WatchSessionManager: NSObject, ObservableObject, WCSessionDelegate {
                  didReceiveApplicationContext context: [String: Any]) {
         if let verse = SharedVerse.from(dictionary: context) {
             DispatchQueue.main.async { self.currentVerse = verse }
+
+            // Cache verse for the WidgetKit complication.
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            if let data = try? encoder.encode(verse) {
+                UserDefaults(suiteName: "group.com.YOURTEAM.pulse")?.set(data, forKey: SharedVerse.watchContextKey)
+            }
+
+            // Ask WidgetKit to refresh the complication immediately.
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
